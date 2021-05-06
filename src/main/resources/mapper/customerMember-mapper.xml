@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="member">
+     
+
+	 <resultMap id="memberQna" type="map">
+	 </resultMap>
+	  <resultMap id="memberOrder" type="map">
+	 </resultMap>
+     <resultMap id="member" type="map">
+	</resultMap>
+	 <resultMap id="store" type="map">
+	</resultMap>
+	<resultMap id="memberQnaReview" type="map"></resultMap>
+	
+	   <resultMap id="member1" type="member">
+	</resultMap>
+	<insert id="insertMember" parameterType="member" >
+		insert into member values(SEQ_MEMBERNUM.nextval,#{memberId},#{memberPw},#{memberName},#{memberAddress},#{memberBirth},#{memberPhone},#{memberEmail},#{nickName},SYSDATE+9/24,#{memberGender},default,0,0,#{profileImage},#{memberAddress1})
+	</insert>
+	
+	<select id="checkId" parameterType="String" resultType="_int">
+		select count(*) from member where memberId=#{memberId}
+	</select>
+	
+	<select id="memberCount" resultType="_int">
+		SELECT COUNT(*) FROM MEMBER
+	</select>
+	
+	<select id="selectReviewList" resultType="map" parameterType="string">
+		SELECT r.*, s.STORENAME FROM REVIEW r JOIN MEMBER m ON(r.memberNum = m.memberNum) JOIN STORE s ON(r.businessCode = s.businessCode) WHERE m.memberId = #{memberId} ORDER BY writeDate DESC
+	</select>
+	
+	<delete id="deleteReview" parameterType="_int">
+		DELETE FROM REVIEW WHERE reviewNum = #{no}
+	</delete>
+	
+	<select id="checkNick" parameterType="string" resultType="_int">
+		select count(*) from member where nickName=#{nickName}
+	</select>
+	
+	<select id="checkEmail" parameterType="String" resultType="_int">
+		select count(*) from member where memberEmail=#{memberEmail}
+	</select>
+	<select id="login" parameterType="map" resultMap="member">
+		select * from member where memberId=#{id}
+	</select>
+	<select id="selectMember" parameterType="string" resultMap="member1" >
+		select * from member where memberId=#{memberId}
+	</select>
+	<update id="update" parameterType="member">
+		update member set NICKNAME=#{nickName},MEMBERBIRTH=#{formatBirth},MEMBEREMAIL=#{memberEmail},MEMBERPHONE=#{memberPhone},MEMBERADDRESS=#{memberAddress},MEMBERGENDER=#{memberGender},PROFILEIMAGE=#{profileImage},MEMBERADDRESS1=#{memberAddress1} where MEMBERID=#{memberId}		
+	</update>
+	
+	<select id="selectReviewView" parameterType="_int" resultType="map">
+		SELECT r.*, s.STORENAME FROM REVIEW r JOIN STORE s ON(r.businessCode = s.businessCode) WHERE r.reviewNum = #{no}
+	</select>
+
+	<!-- 가게 거리로 검색 -->
+
+	<select id="selectStore" parameterType="map" resultType="store">
+		SELECT *
+		FROM 
+		(
+    		SELECT STORE.*, DISTNACE_WGS84(#{lat}  - 0.0000000000009, #{lng}, atitude, longitude) AS DISTANCE
+    		FROM STORE
+    		WHERE (atitude between #{lat} - 0.039 and #{lat} + 0.039)
+    			AND (longitude between #{lng} - 0.042 and #{lng} + 0.042)
+    			AND isConfirm = 1
+    			AND 
+    			<choose>
+    				<when test="category eq '전체'">
+    					1 = 1
+    				</when>
+    				<otherwise>
+    					storeCategory = #{category}
+    				</otherwise>
+    			</choose>
+    		ORDER BY DISTANCE
+    	)			  	
+	</select>
+	
+	<!-- 가게 상세보기 -->
+	<select id="selectStore2" parameterType="int" resultType="store">		  	
+		select* from store where BUSINESSCODE=#{besinessCode} and ISCONFIRM=1	
+	</select>
+
+		  
+		<delete id="drop" parameterType="member">
+			delete from member where MEMBERID=#{memberId}
+		
+		</delete>
+	
+	<select id="selectCategoryList" parameterType="_int" resultType="map">
+      select b.menucategorycode, b.menucategory from menu a inner join menu_category b on a.businesscode=b.businesscode where a.businesscode=#{businessCode} AND b.categorystate=0 group by b.menucategorycode, b.menucategory order by b.menucategorycode asc
+   </select>
+	
+
+	<!-- <select id="selectMenuList" parameterType="_int" resultType="map">
+		select * from menu where menucategorycode=#{menuCategoryCode} AND businesscode=#{businessCode}
+	</select> -->
+	
+	<!-- 아이디찾기 -->
+	<select id="selectSearchId" parameterType="map" resultType="map">
+	select * from member where membername=#{memberName} and memberemail=#{memberEmail}
+	</select>
+	
+	<!-- 비밀번호찾기 -->
+	<select id="selectConfirmEmail" resultType="map" parameterType="map">
+	select * from member where memberid=#{memberId} and memberemail=#{memberEmail}
+	</select>
+	<update id="updatePw" parameterType="map">
+	update member set memberpw=#{memberPw} where memberid=#{memberId} and memberemail =#{memberEmail}
+	</update>
+
+	<select id="selectMenuList" parameterType="map" resultMap="member">
+		select * from menu where MENUCATEGORYCODE=#{menuCategoryCode} AND BUSINESSCODE=#{businessCode} AND menustate=0
+	</select>
+		
+	
+	<insert id="qnaAdd" parameterType="map">
+		insert into member_qna values(SEQ_M_QNACODE.NEXTVAL,#{no},sysdate+9/24,#{qnaCategory},#{qnaContent},#{qnaTitle})
+		<selectKey keyProperty="qnaCode" resultType="string" order="AFTER">SELECT SEQ_M_QNACODE.CURRVAL FROM DUAL</selectKey>
+	</insert>
+	
+	 
+
+	
+	
+	<select id="memberQnaList"  parameterType="string" resultType="memberQna">
+		select mq.*, m.memberId from member_qna mq JOIN member m ON(mq.memberNum = m.memberNum) where MEMBERID=#{memberId} order by WRITEDATE DESC
+	</select>
+	
+	<insert id="kakaoEnrollEnd" parameterType="member">
+		insert into member values(SEQ_MEMBERNUM.nextval,#{memberId},default,#{memberName},#{memberAddress},#{memberBirth},#{memberPhone},#{memberEmail},#{nickName},SYSDATE+9/24,#{memberGender},default,0,0,#{profileImage},#{memberAddress1})
+	</insert>
+	<!-- 마이페이지 문의 상세 -->
+	<select id="qnaDtail" parameterType="_int" resultType="memberQna">
+		SELECT mq.*, m.memberId FROM MEMBER_QNA mq JOIN MEMBER m ON(mq.memberNum = m.memberNum) WHERE qnaCode = #{no}
+	</select>
+	<delete id="qnaDelete" parameterType="_int">
+		delete from member_qna where  qnaCode=#{no} 
+	</delete>
+	
+	<update id="qnaUpdate" parameterType="memberQna">
+		update member_qna set QNACATEGORY=#{qnaCategory},QNATITLE=#{qnaTitle},QNACONTENT=#{qnaContent},WRITEDATE=SYSDATE+9/24  where  qnaCode = #{qnaCode} 
+
+	</update>
+	
+	<!-- 주문내역 페이징 카운트 -->
+	<select id="orderCount" resultType="_int">
+		select count(*) from pay where membernum=#{memberNum}
+	</select>
+	
+	<select id="selectMemberOrder" resultMap="memberOrder" parameterType="map">
+		select s.storename,s.storecategory,p.*,m.memberid 
+		from pay p 
+		JOIN store s ON(s.businesscode = p.businesscode) 
+		JOIN member m ON(p.membernum = m.membernum)  where m.memberNum=#{memberNum}
+	</select>
+	<!-- 상세주문내역 -->
+	<select id="orderOne"  resultType="map" parameterType="map">
+		select s.storename,s.storecategory,p.PAYNUM,p.BUSINESSCODE,to_char(p.PAYDATE,'YYYY-MM-DD HH24:MI:SS') as PAYDATE,p.MENUCODE,p.PRICE,p.COUNT,p.MEMBERNUM,p.PAYORDERMETHOD,p.PAYREQUEST,p.PAYORDERNUM,p.PAYADDRESS,p.DELIVERYPAY,m.memberid,q.menuname 
+		from pay p 
+		JOIN store s ON(s.businesscode = p.businesscode) 
+		JOIN member m ON(p.membernum = m.membernum)  
+        JOIN menu q ON(p.menucode = q.menucode) where P.PAYORDERNUM=#{payorderNum}
+	</select>
+
+	
+
+	<select id="selectReview" parameterType="_int" resultType="review">
+		select review.*,memberid from review inner join member on(review.membernum=member.membernum) where businesscode=#{businessCode} order by reviewnum desc
+	</select>
+
+	<resultMap id="memberNotice" type="map">
+	</resultMap>
+	<!-- 회원 공지사항 리스트 -->
+	<select id="selectMemberNotice" resultType="memberNotice">
+		SELECT * FROM NOTICE ORDER BY writeDate DESC
+	</select>
+	
+	<!-- 찜 목록 -->	
+	<select id="selectMarkList" parameterType="string" resultType="store">
+		SELECT 
+			s.*
+		FROM 
+			MARK ma LEFT JOIN MEMBER m ON (ma.memberNum = m.memberNum) LEFT JOIN STORE s ON (ma.businessCode = s.businessCode)  
+		WHERE 
+			m.memberId = #{memberId}
+			AND markState = 1
+	</select>
+
+	<select id="selectIsMark" parameterType="map" resultType="mark">
+		SELECT ma.* FROM MARK ma JOIN MEMBER m ON (ma.memberNum =m.memberNum) WHERE businessCode = #{businessCode} AND m.memberid = #{memberId}
+	</select>
+	
+	<insert id="insertReview" parameterType="map">
+		insert into review values(#{payNum},seq_reviewnum.nextval,#{bsCode},#{memNum},SYSDATE+9/24,#{img},#{grade},#{context})
+	</insert>
+	
+	<select id="reviewAvg" parameterType="_int" resultType="_int"> 
+		select nvl(avg(grade),0) from review where businesscode=#{businessCode}
+	</select>
+	
+	<select id="reviewCount" parameterType="_int" resultType="_int">
+	
+		select count(*) from review where businesscode=#{businessCode}
+		</select>
+	<select id="ownerReviewCount" parameterType="_int" resultType="_int">
+	
+		select count(*) from review_sub where businesscode=#{businessCode}
+	</select>
+	
+	<select id="selectMqr" parameterType="_int" resultType="memberQnaReview">
+		SELECT * FROM MEMBER_QNA_REVIEW WHERE qnaCode = #{no}
+	</select>
+	
+	<insert id="addAttach" parameterType="com.kh.food.qna.model.vo.MemberQnaAttachment">
+		INSERT INTO MEMBER_QNA_ATTACHMENT VALUES(SEQ_M_QNA_FILEUPLOAD.NEXTVAL, #{qnaCode}, #{originalFileName}, #{reNamedFileName}, SYSDATE+9/24, DEFAULT)
+	</insert>
+	
+	<!-- 회원 문의 첨부파일 -->
+	<select id="memberQnaAttach" parameterType="_int" resultType="map">
+		SELECT * FROM MEMBER_QNA_ATTACHMENT WHERE qnaCode = #{no}
+	</select>
+	
+	<select id="selectMemberOrderList" parameterType="_int" resultType="map">
+		select p.*,M.MEMBERID,M.MEMBERNAME,M.MEMBERPHONE,ME.MENUNAME,S.DELIVERYPRICE,S.STORENAME,S.STORECATEGORY from(select row_number() over(partition by payorderNum order by payorderNum) as rnum,payordernum,paynum,businesscode,paydate,menucode,count,membernum,payordermethod,payrequest,price,orderState,deliveryPay,impId from pay) p JOIN MEMBER M ON(P.MEMBERNUM = M.MEMBERNUM) JOIN MENU ME ON(ME.MENUCODE = P.MENUCODE) JOIN STORE S ON(P.BUSINESSCODE = S.BUSINESSCODE) where rnum = 1 and p.membernum =  #{memberNum} order by payordernum desc
+	</select>
+	
+	<select id="selectMemberOrderCount" resultType="_int" parameterType="_int">
+			select count(*) from(select row_number() over(partition by payorderNum order by payorderNum) as rnum,payordernum,paynum,businesscode,paydate,menucode,count,membernum,payordermethod,payrequest,price,orderState,deliveryPay from pay) p JOIN MEMBER M ON(P.MEMBERNUM = M.MEMBERNUM) JOIN MENU ME ON(ME.MENUCODE = P.MENUCODE) JOIN STORE S ON(P.BUSINESSCODE = S.BUSINESSCODE) where rnum = 1 and p.membernum =  #{memberNum} order by payordernum desc
+	
+	</select>
+	<update id="updateAttach" parameterType="com.kh.food.qna.model.vo.MemberQnaAttachment">
+		UPDATE MEMBER_QNA_ATTACHMENT  set ORIGINALFILENAME=#{originalFileName} WHERE QNACODE=#{qnacode}	
+	</update>
+
+	<update id="updateOrderState" parameterType="string">
+		update pay set orderstate = 4 where payordernum = #{payOrderNum}
+	</update>
+	
+	<select id="selectReviewCon" parameterType="_int" resultType="map">
+		SELECT * FROM REVIEW WHERE payNum = #{payNum}
+	</select>
+
+</mapper>

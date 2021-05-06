@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="oneVSone">
+	<resultMap type="map" id="qnaMap"></resultMap>
+	
+	<select id="oneVSoneList" resultType="map">
+		SELECT * FROM OWNER_QNA A INNER JOIN OWNER B ON A.OWNERNUM=B.OWNERNUM ORDER BY WRITEDATE DESC
+	</select>
+	
+	<select id="qnaCount" resultType="_int">
+		SELECT COUNT(*) FROM OWNER_QNA
+	</select>
+	
+	<select id="myQnaList" parameterType="string" resultType="map">
+		SELECT A.*, B.* FROM OWNER_QNA A INNER JOIN OWNER B ON A.OWNERNUM=B.OWNERNUM WHERE OWNERID=#{ownerId} ORDER BY WRITEDATE DESC
+	</select>
+	
+	<select id="myQnaCount" resultType="_int">
+		SELECT COUNT(*) FROM OWNER_QNA WHERE OWNERNUM=#{ownerNum}
+	</select>
+	
+	<select id="oneVSoneView" parameterType="_int" resultType="map">
+		SELECT * FROM OWNER_QNA WHERE QNACODE=#{qnaCode}
+	</select>
+	
+	<select id="selectOwnerForm" parameterType="string" resultType="_int">
+		SELECT A.OWNERNUM FROM OWNER_QNA A INNER JOIN OWNER B ON A.OWNERNUM=B.OWNERNUM WHERE OWNERID=#{ownerId}
+	</select>
+	
+	<select id="qnaSearch" parameterType="map" resultMap="qnaMap">
+		SELECT * FROM OWNER_QNA A INNER JOIN OWNER B ON A.OWNERNUM=B.OWNERNUM WHERE QNACATEGORY=#{qnaCategory} AND QNATITLE LIKE '%'||#{keyword}||'%' ORDER BY WRITEDATE DESC
+	</select>
+	
+	<select id="commentList" parameterType="_int" resultType="map">
+		SELECT * FROM OWNER_QNA_REVIEW WHERE QNACODE=#{qnaCode} ORDER BY WRITEDATE DESC
+	</select>
+	
+	<insert id="insertQna" parameterType="map">
+		INSERT INTO OWNER_QNA VALUES(SEQ_O_QNACODE.NEXTVAL,#{ownerNum}, SYSDATE+9/24, #{qnaCategory}, #{qnaContent}, #{qnaTitle})
+		<selectKey keyProperty="qnaCode" resultType="string" order="AFTER">SELECT SEQ_O_QNACODE.CURRVAL FROM DUAL</selectKey>
+	</insert>
+	
+	<insert id="insertAttach" parameterType="ownerAtt">
+		INSERT INTO OWNER_QNA_ATTACHMENT VALUES(SEQ_O_QNA_FILEUPLOAD.NEXTVAL, #{qnaCode}, #{originalFileName}, #{reNamedFileName}, SYSDATE+9/24, DEFAULT)
+	</insert>
+	
+	<select id="ownerAttach" parameterType="_int" resultType="map">
+		SELECT * FROM OWNER_QNA_ATTACHMENT WHERE QNACODE=#{qnaCode}
+	</select>
+	
+	<delete id="qnaDelete" parameterType="_int">
+		DELETE FROM OWNER_QNA WHERE QNACODE=#{qnaCode}
+	</delete>
+	
+	<select id="selectMyPage" parameterType="_int" resultType="ownermember">
+		SELECT * FROM OWNER WHERE OWNERNUM=#{ownerNum}
+	</select>
+	
+	<update id="updateMyPage" parameterType="map">
+		UPDATE OWNER SET OWNERID=#{ownerId}, OWNERNAME=#{ownerName}, OWNERPW=#{ownerRePw}, OWNERPHONE=#{ownerPhone}, OWNEREMAIL=#{ownerEmail} WHERE OWNERNUM=#{ownerNum}
+	</update>
+	
+	<select id="selectQnaCount" parameterType="_int" resultType="_int">
+		SELECT COUNT(*) FROM OWNER_QNA WHERE OWNERNUM=#{ownerNum}
+	</select>
+
+	<select id="businessReviewCount" parameterType="_int" resultType="_int">
+		SELECT COUNT(*) FROM REVIEW_SUB WHERE BUSINESSCODE=#{businessCode}
+	</select>
+</mapper>

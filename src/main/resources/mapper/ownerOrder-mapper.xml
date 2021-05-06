@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="ownerOrder">
+	<select id="selectOrderList"  parameterType="_int" resultType="pay">
+			select P.*,M.MEMBERID,M.MEMBERNAME,M.MEMBERPHONE,ME.MENUNAME from pay P JOIN MEMBER M ON(P.MEMBERNUM = M.MEMBERNUM) JOIN MENU ME ON(ME.MENUCODE = P.MENUCODE)  where P.BUSINESSCODE = #{businessCode} order by paynum desc
+	</select>
+	<select id="selectPayOrderNum" parameterType="string" resultType="map">			
+		select P.PAYNUM,P.BUSINESSCODE,to_char(P.PAYDATE,'YYYY-MM-DD HH24:MI:SS') as PAYDATE,P.MENUCODE,P.PRICE,P.COUNT,P.MEMBERNUM,P.PAYORDERMETHOD,P.PAYREQUEST,P.PAYORDERNUM,P.PAYADDRESS,P.DELIVERYPAY,M.MEMBERID,M.MEMBERNAME,M.MEMBERPHONE,ME.MENUNAME,S.DELIVERYPRICE from pay P JOIN MEMBER M ON(P.MEMBERNUM = M.MEMBERNUM) JOIN MENU ME ON(ME.MENUCODE = P.MENUCODE) JOIN STORE S ON(P.BUSINESSCODE = S.BUSINESSCODE) WHERE P.PAYORDERNUM = #{payOrderNum}
+	</select>
+	
+	<select id="selectOrderOneList" resultType="pay">
+				select p.*,M.MEMBERID,M.MEMBERNAME,M.MEMBERPHONE,ME.MENUNAME,S.DELIVERYPRICE from(select row_number() over(partition by payorderNum order by payorderNum) as rnum,payordernum,paynum,businesscode,paydate,menucode,count,membernum,payordermethod,payrequest,price,orderState,deliveryPay from pay) p JOIN MEMBER M ON(P.MEMBERNUM = M.MEMBERNUM) JOIN MENU ME ON(ME.MENUCODE = P.MENUCODE) JOIN STORE S ON(P.BUSINESSCODE = S.BUSINESSCODE) where rnum = 1 and p.businesscode = #{businessCode1} order by payordernum desc
+	</select>
+	
+	<select id="selectOrderCount" resultType="_int">
+		select count(*) from(select row_number() over(partition by payorderNum order by payorderNum) as rnum,payordernum,paynum,businesscode,paydate,menucode,count,membernum,payordermethod,payrequest from pay) p JOIN MEMBER M ON(P.MEMBERNUM = M.MEMBERNUM) JOIN MENU ME ON(ME.MENUCODE = P.MENUCODE) where rnum = 1 and p.businesscode = #{businessCode1}
+	</select>
+	
+	<select id="selectTodayOrderCount" resultType="map">
+		select count(*) as todayOrderCount from(select row_number() over(partition by payorderNum order by payorderNum) as rnum,payordernum,paynum,businesscode,paydate,menucode,count,membernum,payordermethod,payrequest,orderstate from pay) p JOIN MEMBER M ON(P.MEMBERNUM = M.MEMBERNUM) JOIN MENU ME ON(ME.MENUCODE = P.MENUCODE) where rnum = 1 and p.businesscode = #{businessCode1} and TO_CHAR(paydate, 'YY/MM/DD') = TO_CHAR(SYSDATE+9/24, 'YY/MM/DD') and p.orderstate != 4
+	</select>
+	
+	<select id="selectPayOneList" parameterType="string" resultType="map">
+	    select count(*) as todayOrderCount from(select row_number() over(partition by payorderNum order by payorderNum) as rnum,payordernum,paynum,businesscode,paydate,menucode,count,membernum,payordermethod,payrequest from pay) p JOIN MEMBER M ON(P.MEMBERNUM = M.MEMBERNUM) JOIN MENU ME ON(ME.MENUCODE = P.MENUCODE) where rnum = 1 and p.businesscode = #{businessCode} and TO_CHAR(paydate, 'YY/MM/DD') = TO_CHAR(SYSDATE, 'YY/MM/DD')
+	</select>
+	
+	<select id="selectStoreList" parameterType="string" resultType="map">
+		select * from store where ownerId = #{ownerId} and isconfirm = 1
+	</select>
+	<select id="selectStoreList2" parameterType="string" resultType="map">
+		select store.* , review.* ,member.memberid
+		from store 
+		inner join review on (store.businesscode=review.businesscode) 
+		inner join member on (review.membernum=member.membernum) 
+		where ownerId=#{ownerId} order by reviewnum desc
+	</select>
+	<update id="updateOrderState" parameterType="map">
+		update pay set orderstate = #{orderState} where payordernum = #{payOrderNum}
+	</update>
+	<select id="selectPayOne" parameterType="string" resultType="map">
+	select p.*,M.MEMBERID,M.MEMBERNAME,M.MEMBERPHONE,ME.MENUNAME,S.DELIVERYPRICE
+	 from(select row_number() over(partition by payorderNum order by payorderNum) as rnum,payordernum,paynum,businesscode,paydate,menucode,count,membernum,payordermethod,payrequest,price,orderState,impid from pay) p 
+	 JOIN MEMBER M ON(P.MEMBERNUM = M.MEMBERNUM) JOIN MENU ME ON(ME.MENUCODE = P.MENUCODE) JOIN STORE S ON(P.BUSINESSCODE = S.BUSINESSCODE) where rnum = 1 and payordernum=#{payOrderNum} order by payordernum desc
+	</select>
+	
+	<select id="selectPayList" resultType="map" parameterType="_int">
+		select payordernum,sum(price) as price from pay where businesscode = #{businessCode} group by payordernum order by payordernum desc
+	</select>
+</mapper>

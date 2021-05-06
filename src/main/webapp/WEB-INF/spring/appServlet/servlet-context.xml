@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/mvc"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.3.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd">
+
+	<!-- DispatcherServlet Context: defines this servlet's request-processing infrastructure -->
+
+	<!-- Enables the Spring MVC @Controller programming model -->
+	<annotation-driven />
+
+	<!-- Handles HTTP GET requests for /resources/** by efficiently serving up static resources in the ${webappRoot}/resources directory -->
+	<resources mapping="/resources/**" location="/resources/" />
+	
+	
+
+	<!-- Resolves views selected for rendering by @Controllers to .jsp resources in the /WEB-INF/views directory -->
+	<beans:bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<beans:property name="prefix" value="/WEB-INF/views/" />
+		<beans:property name="suffix" value=".jsp" />
+	</beans:bean>
+	
+	<context:component-scan base-package="com.kh.food" />
+	
+	<!-- 사장님 사이트 인터셉터 -->
+	<interceptors>
+		<interceptor>
+			<mapping path="/owner/oneVSoneForm.do"/>
+			<mapping path="/owner/myOneVSone.do"/>
+			<mapping path="/owner/storeForm.do"/>
+			<mapping path="/owner/oneVSoneView.do"/>
+			<mapping path="/owner/menuStoreChoice.do"/>
+			<mapping path="/owner/storeChoice.do"/>
+			<mapping path="/owner/ownerReview.do"/>
+			<mapping path="/owner/salesStoreChoice.do"/>
+			<beans:bean id="ownerInterceptor" class="com.kh.food.common.OwnerInterceptor"/>
+		</interceptor>
+	</interceptors>
+	
+	
+	<!-- 관리자 페이지 인터셉터 -->
+	<interceptors>
+		<interceptor>
+			<mapping path="/admin/*"/>
+			<!-- <mapping path="/admin/adminMain.do"/>
+			<mapping path="/admin/appStoreList.do"/>
+			<mapping path="/admin/selectAppStore.do"/>
+			<mapping path="/admin/confirmApp.do"/>
+			<mapping path="/admin/storeList.do"/>
+			<mapping path="/admin/searchStore.do"/>
+			<mapping path="/admin/memberList.do"/>
+			<mapping path="/admin/memDel.do"/>
+			<mapping path="/admin/memberOne.do"/>
+			<mapping path="/admin/ownerList.do"/>
+			<mapping path="/admin/ownerOne.do"/>
+			<mapping path="/admin/ownDel.do"/>
+			<mapping path="/admin/memberQnaList.do"/>
+			<mapping path="/admin/searchMemberQna.do"/>
+			<mapping path="/admin/memberQnaView.do"/>
+			<mapping path="/admin/insertMemberQnaRe.do"/>
+			<mapping path="/admin/deleteMemberQnaReview.do"/>
+			<mapping path="/admin/updateMemberQnaReview.do"/>
+			<mapping path="/admin/deleteMemberQna.do"/>
+			<mapping path="/admin/ownerQnaList.do"/>
+			<mapping path="/admin/searchOwnerQna.do"/>
+			<mapping path="/admin/ownerQnaView.do"/>
+			<mapping path="/admin/insertOwnerQnaRe.do"/>
+			<mapping path="/admin/deleteOwnerQnaReview.do"/>
+			<mapping path="/admin/updateOwnerQnaReview.do"/>
+			<mapping path="/admin/deleteOwnerQna.do"/>
+			<mapping path="/admin/memberNoticeList.do"/>
+			<mapping path="/admin/memberNoticeView.do"/>
+			<mapping path="/admin/memberNoticeForm.do"/>
+			<mapping path="/admin/memberNoticeFormEnd.do"/>
+			<mapping path="/admin/memberfileDownLoad.do"/>
+			<mapping path="/admin/memberNoticeUpdateEnd.do"/>
+			<mapping path="/admin/memNoticeUpdate.do"/>
+			<mapping path="/admin/memberNoticeDel.do"/>			 -->		
+			<beans:bean id="adminInterceptor" class="com.kh.food.common.AdminInterceptor"/>
+		</interceptor>
+	</interceptors>
+	
+	<!-- 멤버 인터셉터 -->
+	<interceptors>
+		<interceptor>
+			<mapping path="/customer/menuInfo.do"/>
+			<beans:bean id="memberInterceptor" class="com.kh.food.common.MemberInterceptor"/>
+		</interceptor>
+	</interceptors>
+		 
+	 <!-- 파일업로드 -->
+	<beans:bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<beans:property name="maxUploadSize" value="10485760"/> <!-- 10메가 -->
+	</beans:bean>
+	 
+	 
+<!-- json 처리를 위한 jsonView 등록 -->
+	<beans:bean id="viewResolver" class="org.springframework.web.servlet.view.BeanNameViewResolver">
+		<beans:property name="order" value="1"/>
+	</beans:bean>
+	<beans:bean id="jsonView" class="net.sf.json.spring.web.servlet.view.JsonView"/>
+	
+	<!-- jackson 처리를 위한 객체 등록 -->	
+	<beans:bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter">
+		<beans:property name="messageConverters"> <!-- s붙이면 list가능 -->
+			<beans:list>
+				<beans:bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter"></beans:bean>
+			</beans:list>
+		</beans:property>
+	</beans:bean>
+	 
+</beans:beans>

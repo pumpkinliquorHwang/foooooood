@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="store">
+
+	<!-- 입점 신청 승인 -->
+	<update id="updateStoreConfirm" parameterType="_int">
+		UPDATE STORE SET isConfirm = 1 WHERE businessCode = #{no}
+	</update>
+	
+	<!-- 입점 신청 리스트 -->
+	<select id="selectAppStoreList" resultType="store">
+		SELECT * FROM STORE WHERE isConfirm = 0 ORDER BY appDate DESC
+	</select>
+	<select id="storeList" parameterType="_int" resultType="store">
+		select * from store where businesscode=#{businessCode}
+	
+	</select>
+	<!-- 입점 신청 store 모달 띄우기 -->
+	<select id="selectAppStore" resultType="store" parameterType="_int">
+		SELECT * FROM STORE WHERE businessCode = #{no}
+	</select>
+	
+	<!-- 입점 신청 Count -->
+	<select id="selectAppStoreCount" resultType="_int">
+		SELECT COUNT(*) FROM STORE WHERE isConfirm = 0
+	</select>
+	
+	<!-- 전체 입점 리스트 -->
+	<select id="selectStoreList" resultType="store">
+		SELECT * FROM STORE WHERE isConfirm = 1
+	</select>
+	<!-- 전체 입점 리스트2 -->
+	<select id="selectStoreListTwo" parameterType="string" resultType="store">
+		SELECT * FROM STORE WHERE ownerId=#{ownerId}
+	</select>
+	<!-- 전체 입점 Count -->
+	<select id="selectStoreCount" resultType="_int">
+		SELECT COUNT(*) FROM STORE WHERE isConfirm = 1
+	</select>
+	
+	<!-- 입점 검색 -->
+	<select id="selectSearchStore" resultType="store">
+		SELECT 
+			*
+		FROM 
+			STORE
+		WHERE
+			isConfirm = 1
+		AND
+			(storeName LIKE '%'||#{keyword}||'%' OR storeAddress LIKE '%'||#{keyword}||'%')		<!-- OR 문 때문에 () 필수 -->
+		AND
+			<choose>
+				<when test="category eq '전체'">
+					1 = 1
+				</when>
+				<otherwise>
+					storeCategory = #{category}
+				</otherwise>
+			</choose>
+		ORDER BY
+			appDate DESC
+	</select>
+	
+	<!-- 입점 검색 Count -->
+	<select id="selectSearchStoreCount" resultType="_int">
+		SELECT 
+			COUNT(*) 
+		FROM 
+			STORE 
+		WHERE
+			isConfirm = 1
+		AND
+			(storeName LIKE '%'||#{keyword}||'%' OR storeAddress LIKE '%'||#{keyword}||'%')
+		AND
+			<choose>
+				<when test="category eq '전체'">
+					1 = 1
+				</when>
+				<otherwise>
+					storeCategory = #{category}
+				</otherwise>
+			</choose>
+	</select>
+	
+	<insert id="addStore" parameterType="map">
+		INSERT INTO STORE VALUES(SEQ_BUSINESSCODE.NEXTVAL, #{ownerId}, #{businessName}, #{businessPhone}, #{storeName}, #{storePhone}, #{storeAddress}, #{storeCategory}, #{reName}, #{minPrice}, #{storeProfile}, DEFAULT, SYSDATE+9/24, #{businessNum}, #{lat}, #{lng}, 0)
+	</insert>
+		
+	<!-- resultMap : Store -->
+	<resultMap type="map" id="store"></resultMap>
+	
+	<resultMap type="map" id="review"></resultMap>
+	<select id="selectReviewList" parameterType="_int" resultType="map">
+	
+	 select store.* , review.* ,member.memberid from store inner join review on (store.businesscode=review.businesscode) inner join member on (review.membernum=member.membernum) where store.businesscode=#{stN}
+	</select>
+
+	<insert id="insertReviewRe" parameterType="map">
+		INSERT INTO REVIEW_SUB VALUES(#{no},#{code},#{context},SYSDATE+9/24)
+	</insert>
+	
+	<select id="selectOwnerRevie" parameterType="_int" resultType="com.kh.food.owner.review.model.vo.OwnerReview">
+	
+		select * from review_sub where businessCode=#{stN}
+
+	</select>
+	<select id="selectOwnerRevie2" parameterType="_int" resultType="com.kh.food.owner.review.model.vo.OwnerReview">
+	
+		select * from review_sub where businessCode=#{businessCode}
+
+	</select>
+	<select id="storeP" parameterType="_int" resultType="string">
+		select substr(storeprofile,0,36) from store where BUSINESSCODE=#{businessCode} and ISCONFIRM=1
+	</select>
+	
+	<!-- 찜 하기 -->
+	<insert id="insertMark" parameterType="map">
+		MERGE INTO MARK S USING DUAL ON(S.MEMBERNUM=(SELECT MEMBERNUM FROM MEMBER WHERE MEMBERID=#{memberId}) AND S.BUSINESSCODE=#{businessCode})
+		WHEN MATCHED THEN
+		UPDATE SET S.MARKSTATE=1
+		WHEN NOT MATCHED THEN
+		INSERT (S.MEMBERNUM, S.BUSINESSCODE, S.MARKSTATE) VALUES ((SELECT MEMBERNUM FROM MEMBER WHERE MEMBERID=#{memberId}),#{businessCode},1)
+	</insert>
+	<!-- 찜 제거 -->
+	<update id="updateMark" parameterType="map">
+		UPDATE MARK SET MARKSTATE=0 WHERE MEMBERNUM=(SELECT MEMBERNUM FROM MEMBER WHERE MEMBERID=#{memberId}) AND BUSINESSCODE=#{businessCode}
+	</update>
+	<select id="selectMark" parameterType="map" resultType="mark">
+		SELECT * FROM MARK WHERE MEMBERNUM=(SELECT MEMBERNUM FROM MEMBER WHERE MEMBERID=#{memberId}) AND BUSINESSCODE=#{businessCode}
+	</select>
+	
+</mapper>

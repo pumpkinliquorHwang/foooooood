@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="ownerMember">
+	<insert id="insertOwner" parameterType="ownermember">
+		insert into owner values(SEQ_OWNERNUM.nextval , #{ownerId},#{ownerPw},#{ownerName},#{ownerPhone},#{ownerEmail},SYSDATE+9/24,SYSDATE+9/24)
+	</insert>
+	
+	<select id="selectLogin" parameterType="string" resultType="ownermember">
+		select * from owner where ownerid = #{ownerId}
+	</select>
+	
+	<select id="selectSearchId" parameterType="map" resultType="map">
+		select * from owner where ownername = #{ownerName} and ownerEmail = #{ownerEmail}
+	</select>
+	
+	<select id="ownerCount" resultType="_int">
+		SELECT COUNT(*) FROM OWNER
+	</select>
+	
+	<select id="todayPayCount" resultType="_int">
+		select count(*) as todayOrderCount
+		from(select 
+		row_number() over(partition by payorderNum order by payorderNum) as rnum,payordernum,paynum,businesscode,paydate,menucode,count,membernum,payordermethod,payrequest,orderstate
+		from pay) p
+		JOIN MEMBER M ON(P.MEMBERNUM = M.MEMBERNUM)
+		JOIN MENU ME ON(ME.MENUCODE = P.MENUCODE)
+		where rnum = 1 and TO_CHAR(paydate, 'YY/MM/DD') = TO_CHAR(SYSDATE+9/24, 'YY/MM/DD')
+		and p.orderstate != 4 
+	</select>
+	
+	<select id="ownerNoticeList" resultType="map">
+		SELECT * FROM OWNERNOTICE ORDER BY OWNERWRITEDATE DESC
+	</select>
+	
+	<select id="selectConfirmIdEmail" resultType="map" parameterType="map">
+		select * from owner where ownerId = #{ownerId} and ownerEmail = #{ownerEmail}
+	</select>
+	
+	<update id="updateTempPw" parameterType="map">
+		update owner set ownerPw = #{ownerPw} where ownerId = #{ownerId} and ownerEmail = #{ownerEmail}
+	</update>
+	
+	<select id="ownerCheckId" parameterType="string" resultType="_int">
+		select count(*) from owner where ownerId = #{ownerId}
+	</select>
+	<!-- 이메일중복 -->
+	<select id="ownerCheckEmail" parameterType="string" resultType="_int">
+		select count(*) from owner where ownerEmail=#{ownerEmail}
+	</select>
+	<update id="lastDate" parameterType="_int">
+		UPDATE OWNER SET LASTCONNECTIONDATE=SYSDATE+9/24 WHERE OWNERNUM=#{ownerNum} 
+	</update>
+	
+	<select id="selectBusiness" parameterType="string" resultType="string">
+		SELECT B.BUSINESSCODE FROM STORE A INNER JOIN REVIEW_SUB B ON A.BUSINESSCODE=B.BUSINESSCODE WHERE A.OWNERID=#{ownerId} 
+	</select>
+</mapper>

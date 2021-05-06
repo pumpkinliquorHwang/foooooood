@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="menu">
+	<resultMap type="map" id="categoryMap"></resultMap>
+	<resultMap type="map" id="menuMap"></resultMap>
+	<insert id="insertCategory" parameterType="map">
+		insert into menu_category values(SEQ_menuCategoryCode.nextval , #{menuCategory} , #{businessCode},0)
+	</insert>
+	<insert id="insertWishList" parameterType="map">
+		INSERT INTO WISHLIST VALUES(SEQ_WISHNUM.NEXTVAL, #{menuCode}, #{businessCode}, #{memberId}, #{menuCount}, #{plusMenuPrice}, SYSDATE+9/24)
+	</insert>
+	<select id="selectWishList" parameterType="map" resultMap="menuMap">
+		SELECT * FROM WISHLIST A INNER JOIN MENU B ON A.MENUCODE=B.MENUCODE WHERE A.MEMBERID=#{memberId} ORDER BY ADDDATE DESC 
+	</select>
+	
+	<select id="bigyoMenuCode" parameterType="map" resultMap="menuMap">
+		SELECT * FROM WISHLIST A INNER JOIN MENU B ON A.MENUCODE=B.MENUCODE WHERE MEMBERID=#{memberId}
+	</select> 
+	
+	<select id="refreshWishList" parameterType="map" resultType="menu">
+		SELECT * FROM MENU WHERE BUSINESSCODE=#{businessCode}
+	</select>
+	
+	<delete id="deleteWishList" parameterType="map">
+		DELETE FROM WISHLIST WHERE MEMBERID=#{memberId} AND BUSINESSCODE=#{businessCode}
+	</delete>
+	
+	<select id="selectMinPrice" parameterType="_int" resultType="store">
+		SELECT * FROM STORE WHERE BUSINESSCODE=#{businessCode}
+	</select>
+	
+	<insert id="insertMenu" parameterType="map">
+		insert into menu values(seq_menucode.nextval,#{businessCode},#{menuCategoryCode},#{menuName},#{menuContent},#{menuPrice},#{menuImage},default,default,default)
+	</insert>
+	<!-- <update id="updateMenuCount" parameterType="map">
+		UPDATE WISHLIST SET MENUCOUNT=#{plusCount} WHERE MENUCODE=#{menuCode}
+	</update>
+	<select id="menuCounts" parameterType="_int" resultType="_int">
+		SELECT MENUCOUNT FROM WISHLIST WHERE MENUCODE=#{menuCode} GROUP BY MENUCOUNT
+	</select> -->
+	<select id="popularityMenu" parameterType="_int" resultType="menu">
+		SELECT * FROM MENU WHERE BUSINESSCODE=#{businessCode} AND MENUSOLDCOUNT>=10
+	</select>
+	<delete id="backWish" parameterType="string">
+		DELETE FROM WISHLIST WHERE MEMBERID=#{memberId}
+	</delete>
+	
+	<delete id="deleteMenuCount" parameterType="_int">
+		DELETE FROM WISHLIST WHERE MENUCODE=#{menuCode}
+	</delete>
+	
+	<select id="menuCount" parameterType="map" resultType="_int">
+		SELECT COUNT(*) FROM MENU WHERE BUSINESSCODE=#{businessCode}
+	</select>
+	
+	<select id="plusPrice" parameterType="map" resultType="wishList">
+		SELECT * FROM WISHLIST WHERE BUSINESSCODE=#{businessCode} AND MEMBERID=#{memberId}
+	</select>
+	
+	<update id="deleteCategory" parameterType="string">
+		update menu_category set categorystate = 1 where menucategorycode = #{menuCategory}
+	</update>
+	<select id="selectMenuCategory" parameterType="string" resultMap="categoryMap">
+		select * from menu_category where businesscode = #{businessCode} and categorystate = 0 order by menucategorycode asc
+	</select>
+	<select id="selectMenuList" parameterType="string" resultMap="menuMap">
+		select * from menu where businessCode = #{businessCode} and menustate=0
+	</select>
+	
+	<select id="selectSame" parameterType="map" resultType="wishList">
+		SELECT * FROM WISHLIST WHERE BUSINESSCODE=#{businessCode} AND MEMBERID=#{memberId}
+	</select>
+	
+	<delete id="deleteMenuCode" parameterType="_int">
+		DELETE FROM WISHLIST WHERE MENUCODE=#{reMenuCode}
+	</delete>
+	<update id="updateMenuPrice" parameterType="map">
+			update menu set menuprice = #{menuPrice} where menucode = #{menuCode}
+	</update>
+	
+	<update id="deleteMenu" parameterType="string">
+		update menu set menustate = 1 where menucode = #{menuCode}
+	</update>
+	
+	<select id="selectOneMenu" parameterType="string" resultType="map">
+		select * from menu where menucode = #{menuCode}
+	</select>
+	
+	<update id="updateMenu" parameterType="map" >
+		update menu set menuName = #{menuName} , menuPrice = #{menuPrice} , menuContent = #{menuContent} , menuImage = #{menuImage} where menuCode = #{menuCode}
+	</update>
+	
+	<update id="updateMenuSoldOut" parameterType="string">
+		update menu set menuSoldOut = 1 where menuCode = #{menuCode}
+	</update>
+	
+	<update id="updateCancleSoldOut" parameterType="string">
+		update menu set menuSoldOut = 0 where menuCode = #{menuCode}
+	</update>
+	
+	<select id="menuSelect" parameterType="_int" resultType="menu">
+		SELECT * FROM MENU WHERE MENUCODE=#{menuCode}
+	</select>
+	
+	<update id="deleteMenu1" parameterType="string">
+		update menu set menuState = 1 where menucategorycode = #{menuCategory}
+	</update>
+	
+	<select id="selectMenuCategory1" resultType="map">
+			select * from menu_category where menuCategorycode = #{menuCategory}
+	</select>
+</mapper>
